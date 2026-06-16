@@ -321,3 +321,10 @@ def task6_performance_heatmap(df):
     
     return heatmap_data
 
+if __name__ == "__main__":
+    df = task1_preprocess()
+    task2_time_analysis(df)
+    task3_route_analysis(df)
+    task4_phf_calculation(df)
+    task5_export_driver_info(df)
+    task6_performance_heatmap(df)
