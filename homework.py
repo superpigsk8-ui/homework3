@@ -137,3 +137,50 @@ def task3_route_analysis(df):
     print("\n[任务3] 已保存图像：route_stops.png")
     
     return route_stats
+
+def task4_phf_calculation(df):
+    # 只统计刷卡类型=0的记录
+    df_normal = df[df['刷卡类型'] == 0].copy()
+    
+    # 1. 统计全天各小时刷卡量，找出高峰小时
+    hour_counts = df_normal.groupby('hour').size()
+    peak_hour = hour_counts.idxmax()
+    peak_count = hour_counts.max()
+    
+    print("\n" + "="*50)
+    print("任务4 高峰小时系数PHF计算结果：")
+    print(f"高峰小时：{peak_hour:02d}:00～{peak_hour+1:02d}:00，刷卡量：{peak_count} 次")
+    
+    # 提取高峰小时内的所有记录
+    df_peak = df_normal[df_normal['hour'] == peak_hour].copy()
+    # 计算从小时开始的总分钟数（精确到秒）
+    df_peak['total_minutes'] = df_peak['交易时间'].dt.minute + df_peak['交易时间'].dt.second / 60.0
+    
+    # 2. 5分钟粒度统计
+    five_min_counts = []
+    for i in range(12):
+        start, end = i*5, (i+1)*5
+        count = ((df_peak['total_minutes'] >= start) & (df_peak['total_minutes'] < end)).sum()
+        five_min_counts.append(count)
+    max_5min_idx = np.argmax(five_min_counts)
+    max_5min_count = five_min_counts[max_5min_idx]
+    start_5min, end_5min = max_5min_idx*5, (max_5min_idx+1)*5
+    phf5 = peak_count / (12 * max_5min_count)
+    
+    # 3. 15分钟粒度统计
+    fifteen_min_counts = []
+    for i in range(4):
+        start, end = i*15, (i+1)*15
+        count = ((df_peak['total_minutes'] >= start) & (df_peak['total_minutes'] < end)).sum()
+        fifteen_min_counts.append(count)
+    max_15min_idx = np.argmax(fifteen_min_counts)
+    max_15min_count = fifteen_min_counts[max_15min_idx]
+    start_15min, end_15min = max_15min_idx*15, (max_15min_idx+1)*15
+    phf15 = peak_count / (4 * max_15min_count)
+    
+    print(f"最大5分钟刷卡量（{peak_hour:02d}:{start_5min:02d}~{peak_hour:02d}:{end_5min:02d}）：{max_5min_count} 次")
+    print(f"PHF5 = {peak_count} / (12 × {max_5min_count}) = {phf5:.4f}")
+    print(f"最大15分钟刷卡量（{peak_hour:02d}:{start_15min:02d}~{peak_hour:02d}:{end_15min:02d}）：{max_15min_count} 次")
+    print(f"PHF15 = {peak_count} / (4 × {max_15min_count}) = {phf15:.4f}")
+    
+    return peak_hour, peak_count, max_5min_count, phf5, max_15min_count, phf15
