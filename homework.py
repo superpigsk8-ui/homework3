@@ -88,3 +88,52 @@ def task2_time_analysis(df):
     print("\n图表已保存为 hour_distribution.png")
     
     return early_count, late_count, early_pct, late_pct
+
+def analyze_route_stops(df, route_col='线路号', stops_col='ride_stops'):
+    """
+    计算各线路乘客的平均搭乘站点数及其标准差。
+    
+    Parameters
+    ----------
+    df : pd.DataFrame  预处理后的数据集
+    route_col : str    线路号列名
+    stops_col : str    搭乘站点数列名
+    
+    Returns
+    -------
+    pd.DataFrame  包含列：线路号、mean_stops、std_stops，按 mean_stops 降序排列
+    """
+    result = df.groupby(route_col)[stops_col].agg(['mean', 'std']).reset_index()
+    result.columns = [route_col, 'mean_stops', 'std_stops']
+    result = result.sort_values('mean_stops', ascending=False).reset_index(drop=True)
+    return result
+
+def task3_route_analysis(df):
+    route_stats = analyze_route_stops(df)
+    
+    print("\n" + "="*50)
+    print("任务3 每条线路的平均搭乘站点数及标准差（前10行）：")
+    print(route_stats.head(10).to_string(index=False))
+    
+    # 取均值最高的前15条线路
+    top15 = route_stats.head(15).copy()
+    
+    # seaborn水平条形图
+    plt.figure(figsize=(10, 8))
+    ax = sns.barplot(data=top15, y='线路号', x='mean_stops', palette='Blues_d', orient='h', errorbar=None)
+    
+    # 手动添加误差棒
+    for i, (idx, row) in enumerate(top15.iterrows()):
+        ax.errorbar(x=row['mean_stops'], y=i, xerr=row['std_stops'], fmt='none', capsize=3, color='black', alpha=0.7)
+    
+    ax.set_xlim(0, top15['mean_stops'].max() + top15['std_stops'].max() * 0.5)
+    ax.set_xlabel('Mean Ride Stops', fontsize=12)
+    ax.set_ylabel('Route ID', fontsize=12)
+    ax.set_title('Top 15 Routes: Mean Ride Stops (with Std Dev)', fontsize=14, fontweight='bold')
+    ax.grid(axis='x', linestyle='--', alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('route_stops.png', dpi=150)
+    plt.show()
+    print("\n[任务3] 已保存图像：route_stops.png")
+    
+    return route_stats
