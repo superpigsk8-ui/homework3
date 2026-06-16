@@ -184,3 +184,47 @@ def task4_phf_calculation(df):
     print(f"PHF15 = {peak_count} / (4 × {max_15min_count}) = {phf15:.4f}")
     
     return peak_hour, peak_count, max_5min_count, phf5, max_15min_count, phf15
+
+def task5_export_driver_info(df):
+    # 1. 筛选线路号在1101至1120之间的记录
+    route_mask = (df['线路号'] >= 1101) & (df['线路号'] <= 1120)
+    df_filtered = df[route_mask].copy()
+    
+    # 2. 创建文件夹
+    folder_name = "线路驾驶员信息"
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+    
+    # 3. 对每条线路输出车辆编号与驾驶员编号的对应关系
+    all_routes = range(1101, 1121)
+    
+    print("\n" + "="*50)
+    print("任务5 线路驾驶员信息批量导出：")
+    
+    for route in all_routes:
+        route_data = df_filtered[df_filtered['线路号'] == route]
+        
+        if len(route_data) > 0:
+            # 去重并按车辆编号排序
+            vehicle_driver_pairs = route_data[['车辆编号', '驾驶员编号']].drop_duplicates()
+            vehicle_driver_pairs = vehicle_driver_pairs.sort_values('车辆编号')
+        else:
+            vehicle_driver_pairs = pd.DataFrame(columns=['车辆编号', '驾驶员编号'])
+        
+        # 写入txt文件（格式：第一行"线路号: XXX"，之后每行"车辆编号 驾驶员编号"）
+        file_path = os.path.join(folder_name, f"{route}.txt")
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(f"线路号: {route}\n")
+            for _, row in vehicle_driver_pairs.iterrows():
+                vehicle_id = int(row['车辆编号'])
+                driver_id = int(row['驾驶员编号'])
+                f.write(f"{vehicle_id} {driver_id}\n")
+            
+            if len(vehicle_driver_pairs) == 0:
+                f.write("无数据\n")
+        
+        print(f"已生成: {file_path}")
+    
+    print(f"\n共生成 {len(all_routes)} 个文件，保存在 {os.path.abspath(folder_name)}/")
+    
+    return folder_name
