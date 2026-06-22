@@ -8,7 +8,7 @@ import seaborn as sns
 import os
 from matplotlib.patches import Patch
 
-# ==================== 任务1 ====================
+
 def task1():
     df = pd.read_csv('ICData.csv')
     
@@ -111,7 +111,7 @@ def task3(df):
     print("\n[任务3] 已保存图像：route_stops.png")
     return rs
 
-# ==================== 任务4 ====================
+
 def task4(df):
     d2 = df[df['刷卡类型'] == 0].copy()
     hc = d2.groupby('hour').size()
@@ -146,7 +146,7 @@ def task4(df):
     print(f"最大15分钟刷卡量（{ph:02d}:{m15_idx*15:02d}~{ph:02d}:{(m15_idx+1)*15:02d}）：{m15} 次")
     print(f"PHF15 = {pc} / (4 × {m15}) = {phf15:.4f}")
 
-# ==================== 任务5 ====================
+
 def task5(df):
     mask = (df['线路号'] >= 1101) & (df['线路号'] <= 1120)
     sub = df[mask].copy()
@@ -176,7 +176,7 @@ def task5(df):
     
     print(f"\n共生成20个文件，保存在 {os.path.abspath(folder)}/")
 
-# ==================== 任务6 ====================
+
 def task6(df):
     d2 = df[df['刷卡类型'] == 0].copy()
     
@@ -231,7 +231,7 @@ def task6(df):
 车辆使用分布最为均衡。建议对Top1线路和站点增加运力。
     """)
 
-# ==================== 主程序 ====================
+
 if __name__ == "__main__":
     data = task1()
     task2(data)
